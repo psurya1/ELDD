@@ -1,1 +1,0 @@
-cmd_/home/pi/ELDD/day5/01_EXPORT_SYMBOL/module2/avg.ko := ld -r -EL --build-id=sha1  -T scripts/module.lds -o /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module2/avg.ko /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module2/avg.o /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module2/avg.mod.o;  true

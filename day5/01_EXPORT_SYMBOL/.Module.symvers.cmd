@@ -1,1 +1,0 @@
-cmd_/home/pi/ELDD/day5/01_EXPORT_SYMBOL/Module.symvers := sed 's/ko$$/o/' /home/pi/ELDD/day5/01_EXPORT_SYMBOL/modules.order | scripts/mod/modpost -m -a   -o /home/pi/ELDD/day5/01_EXPORT_SYMBOL/Module.symvers -e -i Module.symvers   -T -

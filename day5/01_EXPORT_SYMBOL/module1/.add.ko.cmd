@@ -1,1 +1,0 @@
-cmd_/home/pi/ELDD/day5/01_EXPORT_SYMBOL/module1/add.ko := ld -r -EL --build-id=sha1  -T scripts/module.lds -o /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module1/add.ko /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module1/add.o /home/pi/ELDD/day5/01_EXPORT_SYMBOL/module1/add.mod.o;  true
