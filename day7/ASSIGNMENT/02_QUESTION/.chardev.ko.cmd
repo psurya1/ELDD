@@ -1,0 +1,1 @@
+cmd_/home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/chardev.ko := ld -r -EL --build-id=sha1  -T scripts/module.lds -o /home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/chardev.ko /home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/chardev.o /home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/chardev.mod.o;  true
