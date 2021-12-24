@@ -1,1 +1,0 @@
-cmd_/home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/Module.symvers := sed 's/ko$$/o/' /home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/modules.order | scripts/mod/modpost -m -a   -o /home/pi/ELDD/day7/ASSIGNMENT/02_QUESTION/Module.symvers -e -i Module.symvers   -T -
