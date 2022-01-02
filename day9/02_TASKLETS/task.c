@@ -1,4 +1,5 @@
 // sample program for interrupt handling...
+// @tasklets..
 
 #include<linux/init.h>
 #include<linux/module.h>
@@ -10,57 +11,67 @@
 #include<linux/uaccess.h>
 #include<linux/interrupt.h>
 
-#define IRQ_NO 2
+#define IRQ_NO 1
 unsigned int i=0;
+void tasklet_func(unsigned long data);
+/* Declare tasklet */
+
+DECLARE_TASKLET(tasklet,tasklet_func,1);
+// Tasklet function body
+
+void tasklet_func(unsigned long data)
+{
+    printk("\n executing the Tasklet function: data %ld\n",data);
+}
 //interrupt handler for IRQ 1.
 static irqreturn_t irq_handler(int irq,void *dev_id)
 {
-    printk(KERN_INFO "\n interrupt occured %d\n",i);
-    i++;
+    printk(KERN_INFO "\n interrupt occured \n");
+    tasklet_schedule(&tasklet);
     return IRQ_HANDLED;
 }
 dev_t dev;
 static struct cdev my_cdev;
 //Function declaration:
-int POW_open(struct inode *inode,struct file *filp);
-ssize_t POW_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp);
-ssize_t POW_write(struct file *filp, const char __user *ubuff,size_t count,loff_t *offp);
-int POW_release(struct inode *inode,struct file *filp);
+int COW_open(struct inode *inode,struct file *filp);
+ssize_t COW_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp);
+ssize_t COW_write(struct file *filp, const char __user *ubuff,size_t count,loff_t *offp);
+int COW_release(struct inode *inode,struct file *filp);
 
 struct file_operations fops=
 {
     .owner  =   THIS_MODULE,
-    .open   =   POW_open,
-    .read   =   POW_read,
-    .write  =   POW_write,
-    .release=   POW_release,
+    .open   =   COW_open,
+    .read   =   COW_read,
+    .write  =   COW_write,
+    .release=   COW_release,
 };
 
 //definition:
 
-int POW_open(struct inode *inode,struct file *filp)
+int COW_open(struct inode *inode,struct file *filp)
 {
     printk("\n OPEN FUNCTION..\n");
     return 0;
 }
-int POW_release(struct inode *inode,struct file *filp)
+int COW_release(struct inode *inode,struct file *filp)
 {
     printk("\n CLOSE FUNCTION..\n");
     return 0;
 }
-ssize_t POW_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
+ssize_t COW_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
 {
     printk("\n READ FUNCTION..\n");
     return 0;
 }    
-ssize_t POW_write(struct file *filp,const char __user *ubuff,size_t count,loff_t *offp)
+ssize_t COW_write(struct file *filp,const char __user *ubuff,size_t count,loff_t *offp)
 {
     printk("\n WRITE FUNCTION..\n");
     return count;
 }   
 static int __init prog_init(void)
 {
-    if((alloc_chrdev_region(&dev,99,1,"POW"))<0)
+    if((alloc_chrdev_region(&dev,99,1,"COW"))<0)
     {
         printk("\n cannot create major number..\n");
         return -1;
@@ -78,7 +89,7 @@ static int __init prog_init(void)
         unregister_chrdev_region(dev,1);
         return -1;
     }
-    if(request_irq(IRQ_NO,irq_handler,IRQF_SHARED,"POW",(void *)(irq_handler)))
+    if(request_irq(IRQ_NO,irq_handler,IRQF_SHARED,"COW",(void *)(irq_handler)))
     {
         printk(KERN_ALERT "\n cannot register the irq number.!!\n");
         free_irq(IRQ_NO,(void*)(irq_handler));
