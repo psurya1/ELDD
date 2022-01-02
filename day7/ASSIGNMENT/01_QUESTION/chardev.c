@@ -1,5 +1,5 @@
-/* 1.Writeacharacterdriverwithopenandclosefunctionality
-     Testthedriverbywritinganapplicationthatopensandclosesthedevicedriver.
+/* 1.Write a character driver with open and close functionality
+     Test the driver by writing an mapplicationthatopensandclosesthedevicedriver.
      Whenopenorclosed,theopenandclosecallsinthedrivershouldbeexecuted.  */
 
 #include<linux/init.h>

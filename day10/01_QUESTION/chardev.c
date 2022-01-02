@@ -1,5 +1,4 @@
-/* 3.Writeacharacterdrivertodynamicallyallocateamaj,minnopairfromthekernel.
-    •Testthesameandconclude            */
+/* SEMAPHORE EXAMPLE PROGRAM.................................. */
 
 #include<linux/init.h>
 #include<linux/module.h>
@@ -8,10 +7,13 @@
 #include<linux/types.h>
 #include<linux/fs.h>
 #include<linux/cdev.h>
+#include<linux/uaccess.h>
+#include<linux/semaphore.h>
 
-#define NAME mydevice3
+
+#define NAME mydevice20
 struct cdev *my_cdev;
-
+struct semaphore *sem;
 
 //protocol
 int NAME_open(struct inode *inode,struct file *filp);
@@ -28,16 +30,17 @@ struct file_operations fops=
     .release=NAME_release,
 };
 
-dev_t MYDEV=0;
+dev_t MYDEV;
 
 static int __init prog_init(void)
 {
     int result;
-    int MINOR,MAJOR;
-    result=alloc_chrdev_region(&MYDEV,15,1,"mydevice3");
+    int MAJOR,MINOR;
+    MYDEV=MKDEV(17,0);
     MAJOR=MAJOR(MYDEV);
     MINOR=MINOR(MYDEV);
     printk(KERN_INFO "\n THE MAJOR NUMBER %d.. THE MINOR NUMBER %d..\n",MAJOR,MINOR);
+    result=register_chrdev_region(MYDEV,1,"mydevice20");
     if(result<0)
     {
         printk(KERN_INFO "\n THE DEVICE NUMBER IS NOT REGISTERED..\n");
@@ -53,35 +56,44 @@ static int __init prog_init(void)
         unregister_chrdev_region(MYDEV,1);
         return(-1);
     }
-    
+
+    // semaphore initialize
+    sema_init(sem,1);
+    printk(KERN_ALERT "\n SEMAPHORE IS INITAILIZED..\n");
     return 0;
     
 }
-MODULE_LICENSE("GPL");
 static void __exit prog_exit(void)
-{   
+{
     int MAJOR,MINOR;
+    MYDEV=MKDEV(17,0);
     MAJOR=MAJOR(MYDEV);
     MINOR=MINOR(MYDEV);
     printk(KERN_INFO "\n THE MAJOR NUMBER %d.. THE MINOR NUMBER %d..\n",MAJOR,MINOR);
     unregister_chrdev_region(MYDEV,1);
     cdev_del(my_cdev);
-    
     printk(KERN_INFO "\n I HAVE REMOVED ALL THE INIT....\n");
 }
 module_init(prog_init);
 module_exit(prog_exit);
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("SRA");
 //function definition
 
+// Globally declared
+char kbuff[60];
 int NAME_open(struct inode *inode,struct file *filp)
 {
+    down(sem);
+    printk(KERN_ALERT "\n CRITICAL SECTION STARTED..\n");
     printk(KERN_ALERT "\n THE OPEN SYSTEM CALL IS CALLED...\n");
     return 0;
 }
 
 ssize_t NAME_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
 {
-    char kbuff[60]="THIS IS MESSAGE FROM KERNEL....";
+    
+    // char kbuff[60]="THIS IS MESSAGE FROM KERNEL....\n";
     unsigned long result;
     ssize_t retval;
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
@@ -105,23 +117,29 @@ ssize_t NAME_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp
         retval=-EFAULT;
         return retval;
     }
+    
 }
+
+
+
 ssize_t NAME_write(struct file *filp,const char __user *ubuff,size_t count,loff_t *offp)
 {
-    char kbuff[60];
+    
     unsigned long result;
     ssize_t retval;
+   
     result=copy_from_user((char*)kbuff,(char*)ubuff,count);
+   
     if(result==0)
     {
-        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",kbuff);
         printk(KERN_INFO  "\n DATA RECEIVED COMPLETED..\n");
         retval=count;
         return retval;
     }
     else if(result>0)
     {  
-        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",kbuff);
         printk(KERN_ALERT "\n THE PART OF DATA IS RECEIVED..\n ");
         retval=(count-result);
         return retval;
@@ -132,9 +150,12 @@ ssize_t NAME_write(struct file *filp,const char __user *ubuff,size_t count,loff_
         retval=-EFAULT;
         return retval;
     }
+    
 }
 int NAME_release(struct inode *inode,struct file *filp)
 {
+    up(sem);
+    printk(KERN_ALERT "\n CRITICAL SECTION ENDED..\n");
     printk(KERN_ALERT "\n THE CLOSE SYSTEM CALL IS CALLED...\n");
     return 0;
 }
