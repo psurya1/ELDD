@@ -20,7 +20,7 @@ int main(int argc,const char *argv[])
         exit(1);
     }
     read(fd,kbuff,sizeof(kbuff));
-    printf("CONSUMER OUTPUT ..%s",kbuff);
+    printf("KERNEL OUTPUT ..%s",kbuff);
    
 
     

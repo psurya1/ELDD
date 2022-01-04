@@ -13,11 +13,10 @@
 
 
 
-//struct class *dev_class;
+struct class *dev_class;
 struct cdev my_cdev;
 dev_t dev;
 wait_queue_head_t wq;
-int wait_flag=0;
 
 //declaration:
 int RSA_open(struct inode *inode,struct file *filp);
@@ -55,46 +54,38 @@ static int __init RSA_init(void)
     if((cdev_add(&my_cdev,dev,1))<0)
     {
         printk("\n cannot add major number and cdev.\n");
-        goto r_class;
+        unregister_chrdev_region(dev,1);
+        return -1;
     }
 
-   /* // creating struct class
+    // creating struct class
     if((dev_class=class_create(THIS_MODULE,"RSA_class"))==NULL)
     {
         printk("\n cannot create class.\n");
-        goto r_class;
+        unregister_chrdev_region(dev,1);
+        return -1;
     }
     // creating struct device
     if((device_create(dev_class,NULL,dev,NULL,"RSA_device"))==NULL)
     {
         printk("\n cannot create device.\n");
-        goto r_device;
-    }
-    
-
-r_device:
         class_destroy(dev_class);
-        */
-r_class:
-        unregister_chrdev_region(dev,1);
-        return -1; 
-
+    }  
+    
     // initialize wait queue
     init_waitqueue_head(&wq);
 
    
     printk("\n device driver loaded..\n");
-    return 0;
+    return 0;  
 }
 
 static void __exit RSA_exit(void)
 {
-    wait_flag=2;
-    wake_up_interruptible(&wq);
- //   class_destroy(dev_class);
- //   device_destroy(dev_class,dev);
-    unregister_chrdev_region(dev,1);
+    device_destroy(dev_class,dev);
+    class_destroy(dev_class);
     cdev_del(&my_cdev);
+    unregister_chrdev_region(dev,1);
     printk("device driver unloaded..\n");
 }
 
@@ -103,7 +94,8 @@ MODULE_AUTHOR("SRA");
 module_init(RSA_init);
 module_exit(RSA_exit);
 
-
+char kbuff[60];
+int size_kbuff=0;
 int RSA_open(struct inode *inode,struct file *filp)
 {
     printk("\n device file opened..\n");
@@ -111,10 +103,12 @@ int RSA_open(struct inode *inode,struct file *filp)
 }
 ssize_t RSA_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
 {
-
-    char kbuff[60]="THIS IS MESSAGE FROM KERNEL....";
     unsigned long result;
     ssize_t retval;
+    if(size_kbuff==0)
+    {
+        wait_event_interruptible(wq,size_kbuff>=0);
+    }
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
     if(result==0)
     {
@@ -136,47 +130,38 @@ ssize_t RSA_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
         retval=-EFAULT;
         return retval;
     }
-    wait_flag=1;
-    wake_up_interruptible(&wq);
+    
     
 }
 ssize_t RSA_write(struct file *filp, const char __user *ubuff,size_t count,loff_t *offp)
 {
-    while(1)
-    {
-        printk("\n waiting for event ..\n");
-        wait_event_interruptible(wq,wait_flag!=0);
-        if(wait_flag==2)
-        {
-            printk("event came from exit function..!\n");
-            return 0;
-        }
 
-        char kbuff[60];
-        unsigned long result;
-        ssize_t retval;
-        result=copy_from_user((char*)kbuff,(char*)ubuff,count);
-        if(result==0)
-        {
-            printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
-            printk(KERN_INFO  "\n DATA RECEIVED COMPLETED..\n");
-            retval=count;
-            return retval;
-        }
-        else if(result>0)
-        {  
-            printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
-            printk(KERN_ALERT "\n THE PART OF DATA IS RECEIVED..\n ");
-            retval=(count-result);
-            return retval;
-        }
-        else
-        {
-            printk(KERN_ALERT "\n ERROR IN WRITING");
-            retval=-EFAULT;
-            return retval;
-        }
+    unsigned long result;
+    ssize_t retval;
+    result=copy_from_user((char*)kbuff,(char*)ubuff,count);
+    size_kbuff=(count-result);
+    wake_up_interruptible(&wq);
+    if(result==0)
+    {
+        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+        printk(KERN_INFO  "\n DATA RECEIVED COMPLETED..\n");
+        retval=count;
+        return retval;
     }
+    else if(result>0)
+    {  
+        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+        printk(KERN_ALERT "\n THE PART OF DATA IS RECEIVED..\n ");
+        retval=(count-result);
+        return retval;
+    }
+    else
+    {
+        printk(KERN_ALERT "\n ERROR IN WRITING");
+        retval=-EFAULT;
+        return retval;
+    }
+    
 }
 int RSA_release(struct inode *inode,struct file *filp)
 {

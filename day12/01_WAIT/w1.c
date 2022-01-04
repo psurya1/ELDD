@@ -12,7 +12,7 @@ int main(int argc,const char *argv[])
 {
     int fd;
     
-    char ubuff[60]="THIS IS FROM USER SPACE BY PROCEDUR 1..\n";
+    char ubuff[60]="HEY DUDE ITS WORKING..\n";
     fd=open("/dev/RSA",O_RDWR,0777);
     if(fd<0)
     {

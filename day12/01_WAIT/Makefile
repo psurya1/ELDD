@@ -5,12 +5,11 @@ PWD:=$(shell pwd)
 default:
 	$(MAKE) -C $(KD) M=$(PWD) modules
 	gcc -o w1 w1.c
-	gcc -o w2 w2.c
 	gcc -o r1 r1.c
 	
 clean:
 	$(MAKE) -C $(KD) M=$(PWD) clean
-	rm w1 w2 r1
+	rm w1 r1
 
 
 install:
