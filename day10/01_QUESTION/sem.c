@@ -11,9 +11,14 @@
 #include<linux/semaphore.h>
 
 
-#define NAME mydevice20
-struct cdev *my_cdev;
-struct semaphore *sem;
+#define NAME mydevice2000
+struct cdev *my_cdev; 
+struct semaphore sem;
+struct completion data_read_done;
+struct completion data_write_done;
+
+
+//int completion_flag=0;
 
 //protocol
 int NAME_open(struct inode *inode,struct file *filp);
@@ -40,7 +45,7 @@ static int __init prog_init(void)
     MAJOR=MAJOR(MYDEV);
     MINOR=MINOR(MYDEV);
     printk(KERN_INFO "\n THE MAJOR NUMBER %d.. THE MINOR NUMBER %d..\n",MAJOR,MINOR);
-    result=register_chrdev_region(MYDEV,1,"mydevice20");
+    result=register_chrdev_region(MYDEV,1,"mydevice2000");
     if(result<0)
     {
         printk(KERN_INFO "\n THE DEVICE NUMBER IS NOT REGISTERED..\n");
@@ -58,7 +63,11 @@ static int __init prog_init(void)
     }
 
     // semaphore initialize
-    sema_init(sem,1);
+    sema_init(&sem,1);
+    // completion initialize
+    init_completion(&data_read_done);
+    init_completion(&data_write_done);
+    
     printk(KERN_ALERT "\n SEMAPHORE IS INITAILIZED..\n");
     return 0;
     
@@ -81,22 +90,23 @@ MODULE_AUTHOR("SRA");
 //function definition
 
 // Globally declared
+
 char kbuff[60];
+
 int NAME_open(struct inode *inode,struct file *filp)
 {
-    down(sem);
-    printk(KERN_ALERT "\n CRITICAL SECTION STARTED..\n");
+    
     printk(KERN_ALERT "\n THE OPEN SYSTEM CALL IS CALLED...\n");
     return 0;
 }
 
 ssize_t NAME_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
 {
-    
-    // char kbuff[60]="THIS IS MESSAGE FROM KERNEL....\n";
     unsigned long result;
     ssize_t retval;
+    wait_for_completion_interruptible(&data_write_done);
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
+    complete(&data_read_done);
     if(result==0)
     {
         printk(KERN_ALERT "\n MESSAGE TO USER..\n...%s....\n",kbuff);
@@ -127,9 +137,14 @@ ssize_t NAME_write(struct file *filp,const char __user *ubuff,size_t count,loff_
     
     unsigned long result;
     ssize_t retval;
-   
+    down(&sem);
+    printk(KERN_ALERT "\n CRITICAL SECTION STARTED..\n");
+    
     result=copy_from_user((char*)kbuff,(char*)ubuff,count);
-   
+    complete(&data_write_done);
+    wait_for_completion_interruptible(&data_read_done);
+    up(&sem);
+ 
     if(result==0)
     {
         printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",kbuff);
@@ -154,8 +169,7 @@ ssize_t NAME_write(struct file *filp,const char __user *ubuff,size_t count,loff_
 }
 int NAME_release(struct inode *inode,struct file *filp)
 {
-    up(sem);
-    printk(KERN_ALERT "\n CRITICAL SECTION ENDED..\n");
+    
     printk(KERN_ALERT "\n THE CLOSE SYSTEM CALL IS CALLED...\n");
     return 0;
 }

@@ -13,7 +13,7 @@ int main(int argc,const char *argv[])
     int fd;
     
     char ubuff[60]="THIS IS FROM USER SPACE BY PROCEDUR 2..\n";
-    fd=open("/dev/mydevice20",O_RDWR,0777);
+    fd=open("/dev/mydevice2000",O_RDWR,0777);
     if(fd<0)
     {
         printf("ERROR IN OPENING..\n");

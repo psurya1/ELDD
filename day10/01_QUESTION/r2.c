@@ -1,5 +1,5 @@
 
-// PRODUCER 1....................
+// CONSUMER 1....................
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -11,15 +11,18 @@
 int main(int argc,const char *argv[])
 {
     int fd;
+    char kbuff[60];
     
-    char ubuff[60]="THIS IS FROM USER SPACE BY PROCEDUR 1..\n";
     fd=open("/dev/mydevice2000",O_RDWR,0777);
     if(fd<0)
     {
         printf("ERROR IN OPENING..\n");
         exit(1);
     }
-    write(fd,ubuff,sizeof(ubuff));
+    read(fd,kbuff,sizeof(kbuff));
+    printf("CONSUMER OUTPUT OF 2 ..%s",kbuff);
+   
+
     
     close(fd);
     return 0;
