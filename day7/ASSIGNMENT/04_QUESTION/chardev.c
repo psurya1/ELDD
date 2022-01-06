@@ -68,7 +68,8 @@ int char_dev_open(struct inode *inode,struct file *filp)
     
     /* to supply device private data to other methods of the driver */
     filp->private_data=char_dev_data;
-
+    
+    
     printk(KERN_INFO "\n OPEN WAS SUCCESSFULL..\n");
     return 0;
 }
@@ -78,12 +79,13 @@ int char_dev_release(struct inode *inode,struct file *filp)
     printk(KERN_INFO "\n RELEASE WAS SUCCESSFUL..\n");
     return 0;
 }
-
+int sum;
 ssize_t char_dev_read(struct file *filp,char __user *ubuff,size_t count,loff_t *f_pos)
 {
-    char kbuff[40]="THIS IS MESSAGE FROM KERNEL....";
+    char kbuff[40];
     unsigned long result;
     ssize_t retval;
+    sprintf(kbuff,"%d",sum);
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
     if(result==0)
     {
@@ -110,20 +112,21 @@ ssize_t char_dev_read(struct file *filp,char __user *ubuff,size_t count,loff_t *
 
 ssize_t char_dev_write(struct file *filp,const char __user *ubuff,size_t count,loff_t *f_pos)
 {
-     char kbuff[40];
+    int kbuff[40];
     unsigned long result;
     ssize_t retval;
-    result=copy_from_user((char*)kbuff,(char*)ubuff,count);
+    result=copy_from_user((char*)kbuff,ubuff,count);
+    sum=(int)kbuff[0]+(int)kbuff[1];
     if(result==0)
     {
-        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+        printk(KERN_INFO "\n MESSAGE FROM USER..\n...%d....\n",(int)kbuff[0],(int)kbuff[1]);
         printk(KERN_INFO  "\n DATA RECEIVED COMPLETED..\n");
         retval=count;
         return retval;
     }
     else if(result>0)
     {  
-        printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
+   //   printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
         printk(KERN_ALERT "\n THE PART OF DATA IS RECEIVED..\n ");
         retval=(count-result);
         return retval;
@@ -167,7 +170,8 @@ static int __init prog_init(void)
     if(IS_ERR(char_drv_data.class_char_dev))
     {
         printk(KERN_ALERT "\n CLASS CREATION FAILED.\n");
-        goto unreg_chrdev; 
+        unregister_chrdev_region(char_drv_data.device_number,NO_OF_DEVICES);
+ 
     }
 
     for(i=0;i<NO_OF_DEVICES;i++)
@@ -183,7 +187,12 @@ static int __init prog_init(void)
         if(ret<0)
         {
             printk(KERN_ALERT "\n CDEV ADD FAILED..\n");
-            goto cdev_del;
+            for(;i>0;i--)
+        {
+            device_destroy(char_drv_data.class_char_dev,char_drv_data.device_number+i);
+            cdev_del(&char_drv_data.char_dev_data[i].cdev);
+        }
+        class_destroy(char_drv_data.class_char_dev);
         }
         // populate the sysfs with device number
         char_drv_data.device_char_dev=device_create(char_drv_data.class_char_dev,NULL,char_drv_data.device_number+i,NULL,"dev-%d",i+1);
@@ -191,28 +200,19 @@ static int __init prog_init(void)
         {
             printk(KERN_ALERT "\n DEVICE CREATE FAILED..\n");
             ret=PTR_ERR(char_drv_data.device_char_dev);
-            goto class_del;
-        }
-    }     
-    printk(KERN_ALERT "\n MODULE INIT WAS SUCCESSFUL.\n");
-    return 0;
-
-    cdev_del:
-    class_del:
-        for(;i>0;i--)
+            for(;i>0;i--)
         {
             device_destroy(char_drv_data.class_char_dev,char_drv_data.device_number+i);
             cdev_del(&char_drv_data.char_dev_data[i].cdev);
         }
         class_destroy(char_drv_data.class_char_dev);
-    unreg_chrdev:
-        unregister_chrdev_region(char_drv_data.device_number,NO_OF_DEVICES);
-
-    out:
-        return ret;
+        }
+    }     
+    printk(KERN_ALERT "\n MODULE INIT WAS SUCCESSFUL.\n");
+    return 0;
 }
-// MODULE_LICENSE("GPL");
-// MODULE_AUTHOR("SRA");
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("SRA");
 static void __exit prog_exit(void)
 {
     int i;

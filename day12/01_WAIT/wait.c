@@ -78,6 +78,7 @@ static int __init RSA_init(void)
    
     printk("\n device driver loaded..\n");
     return 0;  
+    
 }
 
 static void __exit RSA_exit(void)
@@ -107,7 +108,7 @@ ssize_t RSA_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
     ssize_t retval;
     if(size_kbuff==0)
     {
-        wait_event_interruptible(wq,size_kbuff>=0);
+        wait_event(wq,size_kbuff>=0);
     }
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
     if(result==0)
@@ -140,7 +141,7 @@ ssize_t RSA_write(struct file *filp, const char __user *ubuff,size_t count,loff_
     ssize_t retval;
     result=copy_from_user((char*)kbuff,(char*)ubuff,count);
     size_kbuff=(count-result);
-    wake_up_interruptible(&wq);
+    wake_up(&wq);
     if(result==0)
     {
         printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);

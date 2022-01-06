@@ -11,7 +11,7 @@
 int main()
 {
     int fd;
-    kbuff[40];
+    char kbuff[40];
     fd=open("/dev/AUS",O_RDWR,0777);
     if(fd<0)
     {
@@ -19,5 +19,6 @@ int main()
         exit(1);
     }
     read(fd,kbuff,sizeof(kbuff));
+    printf("OUTPUT OF R1 ..%s\n",kbuff);
     close(fd);
 }

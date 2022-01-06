@@ -1,4 +1,4 @@
-obj-m:=chardev.o
+obj-m:=class.o
 KD=/lib/modules/$(shell uname -r)/build/
 PWD:=$(shell pwd)
 

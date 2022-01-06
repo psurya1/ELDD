@@ -21,7 +21,7 @@ int main()
     }
     write(fd,array,sizeof(array));
     read(fd,a,sizeof(a));
-    printf("OUPUT ...%s..\n",a);
+    printf("OUPUT MUST 30...%s..\n",a);
    
 
     

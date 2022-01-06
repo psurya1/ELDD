@@ -85,10 +85,12 @@ static int __init prog_init(void)
 
 static void __exit prog_exit(void)
 {
-    unregister_chrdev_region(dev,1);
-    cdev_del(&my_cdev);
-    class_destroy(dev_class);
+    
+    
     device_destroy(dev_class,dev);
+    class_destroy(dev_class);
+    cdev_del(&my_cdev);
+    unregister_chrdev_region(dev,1);
     printk(KERN_INFO "\n DRIVER UNLOADED..\n");
 }
 module_init(prog_init);

@@ -11,7 +11,7 @@
 int main()
 {
     int fd;
-    ubuff[40]="THIS IS FROM USER TO KERNEL.\n";
+    char ubuff[40]="surya dude";
     fd=open("/dev/AUS",O_RDWR,0777);
     if(fd<0)
     {
@@ -19,5 +19,6 @@ int main()
         exit(1);
     }
     write(fd,ubuff,sizeof(ubuff));
+    printf("WRITING DONE\n");
     close(fd);
 }

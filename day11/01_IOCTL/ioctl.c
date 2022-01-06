@@ -158,7 +158,7 @@ int NEW_release(struct inode *inode,struct file *filp)
 long NEW_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
 {
     unsigned int temp,STOP_BITS;
-   // ssize_t retval =SUCCESS;
+    ssize_t retval =1;
     char ubuff[100];
     struct default_data *ToSend;
     printk("\n IOCTLFUNCTION");
@@ -180,7 +180,7 @@ long NEW_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
         case DEFAULT_DATA:
                 ToSend=(struct default_data *)ubuff;
                 copy_from_user(ubuff,(struct default_data *)arg,sizeof(struct default_data));
-                printk("default data is %d\n",ToSend->baud_rate);
+                printk("default data is %d %d %d\n",ToSend->baud_rate,ToSend->stop_bits,ToSend->parity);
                 break;
         default:
                 printk(KERN_ALERT "\n COMMAND NOT FOUND.\n");

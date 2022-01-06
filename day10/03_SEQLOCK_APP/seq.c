@@ -43,6 +43,7 @@ static int __init prog_init(void)
         printk("\n Cannot create major number..\n");
         return -1;
     }
+    printk("\n MAJOR : MINOR %d:%d\n",MAJOR(dev),MINOR(dev));
     // adding cdev
     cdev_init(&my_cdev,&fops);
     // adding major and cdev
@@ -80,17 +81,18 @@ int AUS_release(struct inode *inode,struct file *filp)
 }
 
 //global declaration:
-write_seqlock(&lock);
-{
-    char kbuff[40];
-}
-write_sequnlock(&lock);
+
+
+char kbuff[40];
+
 
 ssize_t AUS_write(struct file *filp,const char __user *ubuff,size_t count,loff_t *offp)
 {
     unsigned long result;
     ssize_t retval;
+    write_seqlock(&lock);
     result=copy_from_user((char*)kbuff,(char*)ubuff,count);
+    write_sequnlock(&lock);
     if(result==0)
     {
         printk(KERN_ALERT "\n MESSAGE FROM USER..\n...%s....\n",ubuff);
@@ -121,9 +123,10 @@ ssize_t AUS_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
     do
     {
         seq_no=read_seqbegin(&lock);
-        read_val[40]=kbuff[40];
+   //   read_val[40]=kbuff[40];
+        strcpy(read_val,kbuff);
     }while(read_seqretry(&lock,seq_no));
-    result=copy_to_user((char*)ubuff,(char*)kbuff,count);
+    result=copy_to_user((char*)ubuff,(char*)read_val,count);
     if(result==0)
     {
         printk(KERN_ALERT "\n MESSAGE TO USER..\n...%s....\n",kbuff);

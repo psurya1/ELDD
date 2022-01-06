@@ -10,8 +10,7 @@ int main()
 {
     int fd;
     int ubuff[60]={20,10};
-    
-//  char ubuff[100]="THIS MESSAGE FROM USER..\n";  
+     
     char b[100];
     
     fd=open("/dev/SUB",O_RDWR,0777);
@@ -22,7 +21,7 @@ int main()
     }
     write(fd,ubuff,sizeof(ubuff));
     read(fd,b,sizeof(b));
-    printf("OUPUT ...%s..\n",b);
+    printf("OUPUT  MUST 10...%s..\n",b);
    
 
     

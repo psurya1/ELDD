@@ -9,20 +9,20 @@
 int main()
 {
     int fd;
-    int ubuff[60]={20,10};
+    int ubuff3[60]={20,10};
     
-//  char ubuff[100]="THIS MESSAGE FROM USER..\n";  
-    char b[100];
+//  char ubuff1[100]="THIS MESSAGE FROM USER..\n";  
+    char d[100];
     
-    fd=open("/dev/SUB",O_RDWR,0777);
+    fd=open("/dev/calculator",O_RDWR,0777);
     if(fd<0)
     {
         printf("ERROR IN OPENING\n");
         exit(1);
     }
-    write(fd,ubuff,sizeof(ubuff));
-    read(fd,b,sizeof(b));
-    printf("OUPUT ...%s..\n",b);
+    write(fd,ubuff3,sizeof(ubuff3));
+    read(fd,d,sizeof(d));
+    printf("OUPUT MUST 2 ...%s..\n",d);
    
 
     
