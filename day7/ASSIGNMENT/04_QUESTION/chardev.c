@@ -89,7 +89,7 @@ static int cal_open(struct inode *inode,struct file *filp)
 
     struct file_operations *new_fops=filp->f_op;
 
-    printk("FUNCTION POINTERS %p and %p \n",new_fops->write,new_fops->read);
+//    printk("FUNCTION POINTERS %p and %p \n",new_fops->write,new_fops->read);
     switch(minor_num)
     {
         case 1:

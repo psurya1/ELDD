@@ -16,7 +16,7 @@ unsigned int i=0;
 void tasklet_func(unsigned long data);
 /* Declare tasklet */
 
-DECLARE_TASKLET(tasklet,tasklet_func,1);
+struct tasklet_struct *tasklet=NULL;
 // Tasklet function body
 
 void tasklet_func(unsigned long data)
@@ -27,7 +27,7 @@ void tasklet_func(unsigned long data)
 static irqreturn_t irq_handler(int irq,void *dev_id)
 {
     printk(KERN_INFO "\n interrupt occured \n");
-    tasklet_schedule(&tasklet);
+    tasklet_schedule(tasklet);
     return IRQ_HANDLED;
 }
 dev_t dev;
@@ -94,6 +94,7 @@ static int __init prog_init(void)
         printk(KERN_ALERT "\n cannot register the irq number.!!\n");
         free_irq(IRQ_NO,(void*)(irq_handler));
     }
+    tasklet_init(tasklet,tasklet_func,0);
     printk("\n DRIVER LOADED..\n");
     return 0;
 }

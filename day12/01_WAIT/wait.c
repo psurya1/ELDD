@@ -13,7 +13,7 @@
 
 
 
-struct class *dev_class;
+//struct class *dev_class;
 struct cdev my_cdev;
 dev_t dev;
 wait_queue_head_t wq;
@@ -58,7 +58,7 @@ static int __init RSA_init(void)
         return -1;
     }
 
-    // creating struct class
+ /*   // creating struct class
     if((dev_class=class_create(THIS_MODULE,"RSA_class"))==NULL)
     {
         printk("\n cannot create class.\n");
@@ -70,7 +70,7 @@ static int __init RSA_init(void)
     {
         printk("\n cannot create device.\n");
         class_destroy(dev_class);
-    }  
+    }  */
     
     // initialize wait queue
     init_waitqueue_head(&wq);
@@ -83,8 +83,8 @@ static int __init RSA_init(void)
 
 static void __exit RSA_exit(void)
 {
-    device_destroy(dev_class,dev);
-    class_destroy(dev_class);
+ //   device_destroy(dev_class,dev);
+ //   class_destroy(dev_class);
     cdev_del(&my_cdev);
     unregister_chrdev_region(dev,1);
     printk("device driver unloaded..\n");
@@ -108,7 +108,7 @@ ssize_t RSA_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp)
     ssize_t retval;
     if(size_kbuff==0)
     {
-        wait_event(wq,size_kbuff>=0);
+        wait_event(wq,size_kbuff>0);
     }
     result=copy_to_user((char*)ubuff,(char*)kbuff,count);
     if(result==0)

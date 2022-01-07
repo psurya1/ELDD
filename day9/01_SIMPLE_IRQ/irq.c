@@ -78,7 +78,7 @@ static int __init prog_init(void)
         unregister_chrdev_region(dev,1);
         return -1;
     }
-    if(request_irq(IRQ_NO,irq_handler,IRQF_SHARED,"POW",(void *)(irq_handler)))
+    if(request_irq(IRQ_NO,irq_handler,IRQF_SHARED,"POW",(void *)(irq_handler))<0)
     {
         printk(KERN_ALERT "\n cannot register the irq number.!!\n");
         free_irq(IRQ_NO,(void*)(irq_handler));
