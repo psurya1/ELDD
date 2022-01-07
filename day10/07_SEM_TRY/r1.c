@@ -1,5 +1,5 @@
 
-// CONSUMER 2....................
+// CONSUMER 1....................
 
 #include<stdio.h>
 #include<stdlib.h>
@@ -20,7 +20,7 @@ int main(int argc,const char *argv[])
         exit(1);
     }
     read(fd,kbuff,sizeof(kbuff));
-    printf("CONSUMER OUTPUT OF 2 ..%s",kbuff);
+    printf("CONSUMER OUTPUT OF 1..%s",kbuff);
    
 
     

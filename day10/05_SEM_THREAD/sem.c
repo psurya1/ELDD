@@ -9,14 +9,19 @@
 #include<linux/cdev.h>
 #include<linux/uaccess.h>
 #include<linux/semaphore.h>
+#include<linux/kthread.h>
+#include<linux/sched.h>
+#include<linux/slab.h>
+#include<linux/device.h>
 
 
 dev_t dev;
 struct cdev my_cdev;
-static int global_var;
-struct task_thread *kthread1;
-struct task_thread *kthread2;
-
+static int global_var=0;
+static struct task_thread *kthread_5;
+static struct task_thread *kthread_6;
+struct semaphore sem_1;
+struct semaphore sem_2;
 
 int thread_function1(void * arg);
 int thread_function2(void * arg);
@@ -24,11 +29,20 @@ int thread_function2(void * arg);
 
 int thread_function1(void * arg)  //
 {
-    int result;
-    result=copy_from_user((int *)global_var,(char *)ubuff,count);
+    down(&sem_1);
+    global_var++;
+    printk("THREAD 1 : %d\n",global_var);
+    up(&sem_1);
+    return 0;
+}
 
-
-    
+int thread_function2(void * arg)  //
+{
+    down(&sem_2);
+    global_var++;
+    printk("THREAD 2 : %d\n",global_var);
+    up(&sem_2);
+    return 0;
 }
 //protocol
 int GOOD_open(struct inode *inode,struct file *filp);
@@ -62,25 +76,36 @@ static int __init prog_init(void)
     {
         printk("\n cannot add major number cdev..\n");
         unregister_chrdev_region(dev,1);
-        return -1
+        return -1;
     }
     // create thread
-    kthread1=kthread_run(thread_function1,NULL,"kthread_1");
-    if(kthread1==NULL)
+    printk("\n threads are created..!\n");
+    kthread_5=kthread_run(thread_function1,NULL,"NAME_kthread_5");
+    if(kthread_5 !=NULL)
     {
-        printk("\n THREAD 1 NOT CREATED..\n");
-        kthread_stop(kthread1);
+        printk("\n THREAD 1  CREATED..\n");
+        
+    }
+    else
+    {
+        printk("\n THREAD NOT CREATED..\n");
+        kthread_stop(kthread_5);
         return -1;
     }
-    kthread2=kthread_run(thread_function2,NULL,"kthread_2");
-    if(kthread2==NULL)
+    kthread_6=kthread_run(thread_function2,NULL,"NAME_kthread_6");
+    if(kthread_6 !=NULL)
+    {
+        printk("\n THREAD 2 CREATED..\n");
+        
+    }
+    else
     {
         printk("\n THREAD 2 NOT CREATED..\n");
-        kthread_stop(kthread2);
+        kthread_stop(kthread_6);
         return -1;
     }
-    
-    sema_init(sem,1);
+    sema_init(&sem_1,1);
+    sema_init(&sem_2,1);
     printk("\n SEMAPHORE INITAILIZED AND DRIVER LOADED..\n");
     return 0;
 }
@@ -90,3 +115,5 @@ static void __exit prog_exit(void)
     cdev_del(&my_cdev);
     printk("\n DRIVER UNLOADED..\n");
 }
+module_init(prog_init);
+module_exit(prog_exit);
