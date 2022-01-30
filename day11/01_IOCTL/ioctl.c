@@ -165,7 +165,7 @@ long NEW_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
     switch(cmd)
     {
         case SET_BAUD_RATE:
-                get_user(temp,(int __user *)arg);
+                get_user(temp,(int *)arg);
                 printk("\n setting baud rate ..%d",temp);
                /* temp=10;
                 put_user(temp,(int __user *)arg); */
@@ -174,7 +174,7 @@ long NEW_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
                 printk("\n the direction is set to write");
                 break;
         case SET_NO_STOP_BITS:
-                get_user(STOP_BITS,(int __user *)arg);
+                get_user(STOP_BITS,(int *)arg);
                 printk("\n setting the stop bit..%d\n",STOP_BITS);
                 break;
         case DEFAULT_DATA:

@@ -13,33 +13,32 @@
 
 
 dev_t dev;
-static struct cdev my_cdev;
-struct semaphore sem_1;
-struct semaphore sem_2;
+static struct cdev *my_cdev;
+struct completion data_read_done;
 
 //protocol
-int NAME_open(struct inode *inode,struct file *filp);
-ssize_t NAME_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp);
-ssize_t NAME_write(struct file *filp, const char __user *ubuff,size_t count,loff_t *offp);
-int NAME_release(struct inode *inode,struct file *filp);
+int SEM_open(struct inode *inode,struct file *filp);
+ssize_t SEM_read(struct file *filp,char __user *ubuff,size_t count,loff_t *offp);
+ssize_t SEM_write(struct file *filp, const char __user *ubuff,size_t count,loff_t *offp);
+int SEM_release(struct inode *inode,struct file *filp);
 
 struct file_operations fops=
 {
     .owner =THIS_MODULE,
-    .open  =NAME_open,
-    .read  =NAME_read,
-    .write =NAME_write,
-    .release=NAME_release,
+    .open  =SEM_open,
+    .read  =SEM_read,
+    .write =SEM_write,
+    .release=SEM_release,
 };
 static int __init prog_init(void)
 {
     int result;
     int MAJOR,MINOR;
-    MYDEV=MKDEV(35,0);
-    MAJOR=MAJOR(MYDEV);
-    MINOR=MINOR(MYDEV);
+    dev=MKDEV(35,0);
+    MAJOR=MAJOR(dev);
+    MINOR=MINOR(dev);
     printk(KERN_INFO "\n THE MAJOR NUMBER %d.. THE MINOR NUMBER %d..\n",MAJOR,MINOR);
-    result=register_chrdev_region(MYDEV,1,"SEM");
+    result=register_chrdev_region(dev,1,"SEM");
     if(result<0)
     {
         printk(KERN_INFO "\n THE DEVICE NUMBER IS NOT REGISTERED..\n");
@@ -48,20 +47,21 @@ static int __init prog_init(void)
     my_cdev=cdev_alloc();
     my_cdev->ops=&fops;
 
-    result=cdev_add(my_cdev,MYDEV,1);
+    result=cdev_add(my_cdev,dev,1);
     if(result<0)
     {
         printk(KERN_INFO "\n THE DEVICE NUMBER AND CDEV NOT CONNECTED.\n");
-        unregister_chrdev_region(MYDEV,1);
+        unregister_chrdev_region(dev,1);
         return(-1);
     }
 
     // semaphore initialize
-    sema_init(&sem_1,1);
-    sema_init(&sem_2,1);
+/*    sema_init(&sem_1,1);
+    sema_init(&sem_2,1);  */
     /* completion initialize
-    init_completion(&data_read_done);
+    
     init_completion(&data_write_done); */
+    init_completion(&data_read_done);
     
     printk(KERN_ALERT "\n SEMAPHORE IS INITAILIZED.. AND DRIVER LOADED..\n");
     return 0;
@@ -70,11 +70,11 @@ static int __init prog_init(void)
 static void __exit prog_exit(void)
 {
     int MAJOR,MINOR;
-    MYDEV=MKDEV(35,0);
-    MAJOR=MAJOR(MYDEV);
-    MINOR=MINOR(MYDEV);
+    dev=MKDEV(35,0);
+    MAJOR=MAJOR(dev);
+    MINOR=MINOR(dev);
     printk(KERN_INFO "\n THE MAJOR NUMBER %d.. THE MINOR NUMBER %d..\n",MAJOR,MINOR);
-    unregister_chrdev_region(MYDEV,1);
+    unregister_chrdev_region(dev,1);
     cdev_del(my_cdev);
     printk(KERN_INFO "\n I HAVE REMOVED ALL THE INIT....\n");
 }
@@ -84,7 +84,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("SRA");
 //global declaration:
 
-kbuff[60];
+char kbuff[60];
 
 int SEM_open(struct inode *inode,struct file *filp)
 {
@@ -104,6 +104,7 @@ ssize_t SEM_read(struct file *filp,char *ubuff,size_t count,loff_t *off)
     ssize_t retval=-1;
     unsigned long res;
     res=copy_to_user((char *)ubuff,(char *)kbuff,count);
+    complete(&data_read_done);
     if(res==0)
     {   
         retval=count;
@@ -111,18 +112,19 @@ ssize_t SEM_read(struct file *filp,char *ubuff,size_t count,loff_t *off)
     }
     else if(res>0)
     {
-        retval=count-result;
+        retval=(count-res);
         return retval;
     }
     printk("ERROE IN READING..\n");
     return retval;
 }
 
-ssize_t SEM_write(struct file *filp,char *ubuff,size_t count,loff_t *off)
+ssize_t SEM_write(struct file *filp,const char *ubuff,size_t count,loff_t *off)
 {
     ssize_t retval=-1;
     unsigned long res;
     res=copy_from_user((char*)kbuff,(char *)ubuff,count);
+    wait_for_completion_interruptible(&data_read_done);
     if(res==0)
     {   
         retval=count;
@@ -130,7 +132,7 @@ ssize_t SEM_write(struct file *filp,char *ubuff,size_t count,loff_t *off)
     }
     else if(res>0)
     {
-        retval=count-result;
+        retval=(count-res);
         return retval;
     }
     printk("ERROE IN WRITING..\n");

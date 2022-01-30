@@ -20,6 +20,7 @@ int main(int argc,const char *argv[])
         exit(1);
     }
     read(fd,kbuff,sizeof(kbuff));
+    
     printf("CONSUMER OUTPUT OF 1..%s",kbuff);
    
 

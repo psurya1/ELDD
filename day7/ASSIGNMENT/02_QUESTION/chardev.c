@@ -11,7 +11,7 @@
 #include <linux/cdev.h>
 
 #define NAME mydevice2;
-struct cdev *my_cdev;
+
 
 //protocol
 int NAME_open(struct inode *inode,struct file *filp);
@@ -29,7 +29,7 @@ struct file_operations fops=
 };
 
 
-
+struct cdev *my_cdev;
 static int __init prog_init(void)
 {
     int result;
@@ -45,8 +45,9 @@ static int __init prog_init(void)
         printk(KERN_INFO "\n THE DEVICE NUMBER IS NOT REGISTERED..\n");
         return(-1);
     }
-    my_cdev=cdev_alloc();
-    my_cdev->ops=&fops;
+/*  my_cdev=cdev_alloc();
+    my_cdev->ops=&fops;  */
+    cdev_init(my_cdev,&fops);
 
     result=cdev_add(my_cdev,MYDEV,1);
     if(result<0)

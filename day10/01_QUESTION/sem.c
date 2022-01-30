@@ -141,8 +141,9 @@ ssize_t NAME_write(struct file *filp,const char __user *ubuff,size_t count,loff_
     printk(KERN_ALERT "\n CRITICAL SECTION STARTED..\n");
     
     result=copy_from_user((char*)kbuff,(char*)ubuff,count);
-    complete(&data_write_done);
+    
     wait_for_completion_interruptible(&data_read_done);
+    complete(&data_write_done);
     up(&sem);
  
     if(result==0)
